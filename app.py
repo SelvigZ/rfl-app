@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import csv
 import os
+import ssl
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
@@ -17,6 +19,9 @@ SEED_CSV_PATH = PROJECT_ROOT / "data" / "seed_measurements.csv"
 def default_database_uri() -> str:
     if os.environ.get("DATABASE_URL"):
         uri = os.environ["DATABASE_URL"]
+        parts = urlsplit(uri)
+        query_pairs = [(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True) if key != "sslmode"]
+        uri = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query_pairs), parts.fragment))
         if uri.startswith("postgresql://"):
             return uri.replace("postgresql://", "postgresql+pg8000://", 1)
         if uri.startswith("postgres://"):
@@ -30,6 +35,12 @@ app = Flask(__name__, static_folder="public", static_url_path="")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "rfl-app-local-dev")
 app.config["SQLALCHEMY_DATABASE_URI"] = default_database_uri()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+if os.environ.get("DATABASE_URL"):
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "connect_args": {
+            "ssl_context": ssl.create_default_context(),
+        }
+    }
 
 db = SQLAlchemy(app)
 
