@@ -4,7 +4,7 @@ import csv
 import os
 import ssl
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -179,33 +179,47 @@ def build_dashboard_context() -> dict[str, object]:
 
 def build_insights_context() -> dict[str, object]:
     measurements = get_measurements()
-    weekly_groups: dict[tuple[int, int], list[Measurement]] = defaultdict(list)
+    weekly_groups: dict[str, list[Measurement]] = defaultdict(list)
+
+    if not measurements:
+        return {
+            "weekly_rows": [],
+            "current_week": None,
+        }
+
+    first_entry_date = datetime.strptime(measurements[0].entry_date, "%Y-%m-%d").date()
+    first_week_start = first_entry_date - timedelta(days=first_entry_date.weekday())
 
     for measurement in measurements:
         entry_date = datetime.strptime(measurement.entry_date, "%Y-%m-%d").date()
-        iso_year, iso_week, _ = entry_date.isocalendar()
-        weekly_groups[(iso_year, iso_week)].append(measurement)
+        week_start = entry_date - timedelta(days=entry_date.weekday())
+        weekly_groups[week_start.isoformat()].append(measurement)
 
     weekly_rows: list[dict[str, object]] = []
-    for (iso_year, iso_week), rows in weekly_groups.items():
+    for week_start_text, rows in weekly_groups.items():
         sorted_rows = sorted(rows, key=lambda row: row.entry_date)
-        first_date = sorted_rows[0].entry_date
-        last_date = sorted_rows[-1].entry_date
+        week_start = datetime.strptime(week_start_text, "%Y-%m-%d").date()
+        week_end = week_start + timedelta(days=6)
+        week_number = ((week_start - first_week_start).days // 7) + 1
+        start_measurement = sorted_rows[0]
         avg_weight = sum(row.weight_lbs for row in sorted_rows) / len(sorted_rows)
         avg_waist = sum(row.waist_in for row in sorted_rows) / len(sorted_rows)
         weekly_rows.append(
             {
-                "iso_year": iso_year,
-                "iso_week": iso_week,
-                "label": f"{iso_year} W{iso_week:02d}",
-                "date_range": f"{first_date} to {last_date}",
+                "week_number": week_number,
+                "label": f"Week {week_number}",
+                "week_start": week_start.isoformat(),
+                "week_end": week_end.isoformat(),
+                "date_range": f"{week_start.isoformat()} to {week_end.isoformat()}",
+                "start_weight": start_measurement.weight_lbs,
+                "start_waist": start_measurement.waist_in,
                 "avg_weight": avg_weight,
                 "avg_waist": avg_waist,
                 "entry_count": len(sorted_rows),
             }
         )
 
-    weekly_rows.sort(key=lambda row: (row["iso_year"], row["iso_week"]), reverse=True)
+    weekly_rows.sort(key=lambda row: row["week_number"], reverse=True)
     current_week = weekly_rows[0] if weekly_rows else None
 
     return {
