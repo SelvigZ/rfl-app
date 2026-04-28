@@ -3,10 +3,13 @@
 {% block content %}
 <main class="app-wrap">
   <section class="hero-panel">
-    <div class="hero-copy">
-      <p class="eyebrow">Local RFL Dashboard</p>
-      <h1>RFL App</h1>
-      <p class="hero-sub">Daily weight and waist tracking without the file-handoff mess.</p>
+    <div class="panel-toolbar">
+      <div class="hero-copy">
+        <p class="eyebrow">Local RFL Dashboard</p>
+        <h1>RFL App</h1>
+        <p class="hero-sub">Daily weight and waist tracking without the file-handoff mess.</p>
+      </div>
+      <a href="{{ url_for('insights') }}" class="button button-secondary">View Insights</a>
     </div>
 
     <div class="metric-grid">

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}RFL Insights{% endblock %}
+{% block content %}
+<main class="app-wrap">
+  <section class="hero-panel">
+    <div class="panel-toolbar">
+      <div>
+        <p class="eyebrow">Weekly Analysis</p>
+        <h1>Insights</h1>
+        <p class="hero-sub">Weekly average weight and waist without cluttering the daily dashboard.</p>
+      </div>
+      <a href="{{ url_for('dashboard') }}" class="button button-secondary">Back to Dashboard</a>
+    </div>
+
+    {% if current_week %}
+      <div class="metric-grid metric-grid-insights">
+        <div class="metric-card metric-card-start">
+          <div class="metric-label">Current Week</div>
+          <div class="metric-value">{{ current_week.label }}</div>
+        </div>
+        <div class="metric-card metric-card-weight">
+          <div class="metric-label">Average Weight</div>
+          <div class="metric-value">{{ "%.2f lbs"|format(current_week.avg_weight) }}</div>
+        </div>
+        <div class="metric-card metric-card-waist">
+          <div class="metric-label">Average Waist</div>
+          <div class="metric-value">{{ "%.2f in"|format(current_week.avg_waist) }}</div>
+        </div>
+        <div class="metric-card metric-card-weight">
+          <div class="metric-label">Entries This Week</div>
+          <div class="metric-value">{{ current_week.entry_count }}</div>
+        </div>
+        <div class="metric-card metric-card-waist">
+          <div class="metric-label">Date Range</div>
+          <div class="metric-value metric-value-small">{{ current_week.date_range }}</div>
+        </div>
+      </div>
+    {% else %}
+      <p class="hero-sub">No data yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Weekly Averages</h2>
+        <p>Grouped by ISO week.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Week</th>
+            <th>Date Range</th>
+            <th>Avg Weight</th>
+            <th>Avg Waist</th>
+            <th>Entries</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in weekly_rows %}
+            <tr>
+              <td>{{ row.label }}</td>
+              <td>{{ row.date_range }}</td>
+              <td>{{ "%.2f"|format(row.avg_weight) }}</td>
+              <td>{{ "%.2f"|format(row.avg_waist) }}</td>
+              <td>{{ row.entry_count }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5">No weekly data yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import os
 import ssl
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -176,6 +177,43 @@ def build_dashboard_context() -> dict[str, object]:
     }
 
 
+def build_insights_context() -> dict[str, object]:
+    measurements = get_measurements()
+    weekly_groups: dict[tuple[int, int], list[Measurement]] = defaultdict(list)
+
+    for measurement in measurements:
+        entry_date = datetime.strptime(measurement.entry_date, "%Y-%m-%d").date()
+        iso_year, iso_week, _ = entry_date.isocalendar()
+        weekly_groups[(iso_year, iso_week)].append(measurement)
+
+    weekly_rows: list[dict[str, object]] = []
+    for (iso_year, iso_week), rows in weekly_groups.items():
+        sorted_rows = sorted(rows, key=lambda row: row.entry_date)
+        first_date = sorted_rows[0].entry_date
+        last_date = sorted_rows[-1].entry_date
+        avg_weight = sum(row.weight_lbs for row in sorted_rows) / len(sorted_rows)
+        avg_waist = sum(row.waist_in for row in sorted_rows) / len(sorted_rows)
+        weekly_rows.append(
+            {
+                "iso_year": iso_year,
+                "iso_week": iso_week,
+                "label": f"{iso_year} W{iso_week:02d}",
+                "date_range": f"{first_date} to {last_date}",
+                "avg_weight": avg_weight,
+                "avg_waist": avg_waist,
+                "entry_count": len(sorted_rows),
+            }
+        )
+
+    weekly_rows.sort(key=lambda row: (row["iso_year"], row["iso_week"]), reverse=True)
+    current_week = weekly_rows[0] if weekly_rows else None
+
+    return {
+        "weekly_rows": weekly_rows,
+        "current_week": current_week,
+    }
+
+
 @app.before_request
 def prepare_app() -> None:
     init_db()
@@ -192,6 +230,12 @@ def dashboard():
         form_errors=[],
         default_entry_date=today_iso_date(),
     )
+
+
+@app.route("/insights")
+def insights():
+    context = build_insights_context()
+    return render_template("insights.html", **context)
 
 
 @app.route("/measurements", methods=["POST"])
