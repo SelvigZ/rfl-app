@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}RFL App{% endblock %}
+{% block content %}
+<main class="app-wrap">
+  <section class="hero-panel">
+    <div class="hero-copy">
+      <p class="eyebrow">Local RFL Dashboard</p>
+      <h1>RFL App</h1>
+      <p class="hero-sub">Daily weight and waist tracking without the file-handoff mess.</p>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card metric-card-start">
+        <div class="metric-label">Start Date</div>
+        <div class="metric-value">{{ summary.start_date or "No data" }}</div>
+      </div>
+      <div class="metric-card metric-card-weight">
+        <div class="metric-label">Weight Today</div>
+        <div class="metric-value">{{ summary.weight_today ~ " lbs" if summary.weight_today else "No data" }}</div>
+      </div>
+      <div class="metric-card metric-card-waist">
+        <div class="metric-label">Waist Today</div>
+        <div class="metric-value">{{ summary.waist_today ~ " in" if summary.waist_today else "No data" }}</div>
+      </div>
+      <div class="metric-card metric-card-weight">
+        <div class="metric-label">Weight Change</div>
+        <div class="metric-value">{{ summary.weight_change if summary.weight_change else "No data" }}</div>
+      </div>
+      <div class="metric-card metric-card-waist">
+        <div class="metric-label">Waist Change</div>
+        <div class="metric-value">{{ summary.waist_change if summary.waist_change else "No data" }}</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-grid">
+    <section class="panel chart-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Trend</h2>
+          <p>Date on the bottom axis. Weight and waist plotted together.</p>
+        </div>
+      </div>
+      <div class="chart-area">
+        <canvas id="trendChart"></canvas>
+      </div>
+      <div class="selected-panel" id="selectedPointPanel">
+        <div class="selected-cell">
+          <div class="selected-label">Selected Date</div>
+          <div class="selected-value" id="selectedDate">{{ selected_point.date if selected_point else "No data" }}</div>
+        </div>
+        <div class="selected-cell">
+          <div class="selected-label">Selected Weight</div>
+          <div class="selected-value" id="selectedWeight">{{ "%.2f lbs"|format(selected_point.weight) if selected_point else "No data" }}</div>
+        </div>
+        <div class="selected-cell">
+          <div class="selected-label">Selected Waist</div>
+          <div class="selected-value" id="selectedWaist">{{ "%.2f in"|format(selected_point.waist) if selected_point else "No data" }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel form-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Add Measurement</h2>
+          <p>Quick daily entry from desktop or phone.</p>
+        </div>
+      </div>
+      {% if form_errors %}
+        <div class="error-box">
+          {% for error in form_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <form method="post" action="{{ url_for('create_measurement') }}" class="entry-form">
+        <label>
+          <span>Date</span>
+          <input type="date" name="entry_date" required value="{{ form_values.entry_date if form_values else default_entry_date }}">
+        </label>
+        <label>
+          <span>Weight (lbs)</span>
+          <input type="number" step="0.01" min="0" name="weight_lbs" required value="{{ form_values.weight_lbs if form_values else '' }}">
+        </label>
+        <label>
+          <span>Waist (in)</span>
+          <input type="number" step="0.01" min="0" name="waist_in" required value="{{ form_values.waist_in if form_values else '' }}">
+        </label>
+        <label>
+          <span>Notes</span>
+          <textarea name="notes" rows="3" placeholder="Optional note">{{ form_values.notes if form_values else '' }}</textarea>
+        </label>
+        <button type="submit" class="button button-primary">Save Measurement</button>
+      </form>
+    </section>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-header">
+      <div>
+        <h2>History</h2>
+        <p>{{ summary.row_count }} total entries.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Weight</th>
+            <th>Waist</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in measurements|reverse %}
+            <tr>
+              <td>{{ row["entry_date"] }}</td>
+              <td>{{ "%.2f"|format(row["weight_lbs"]) }}</td>
+              <td>{{ "%.2f"|format(row["waist_in"]) }}</td>
+              <td>{{ row["notes"] }}</td>
+              <td class="action-cell">
+                <a class="button button-secondary" href="{{ url_for('edit_measurement', measurement_id=row['id']) }}">Edit</a>
+                <form method="post" action="{{ url_for('delete_measurement', measurement_id=row['id']) }}" onsubmit="return confirm('Delete this entry?');">
+                  <button type="submit" class="button button-danger">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5">No measurements yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.rflChartData = {{ chart_points|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+{% endblock %}
