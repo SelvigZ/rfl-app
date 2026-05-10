@@ -145,6 +145,18 @@ def build_chart_points(measurements: list[Measurement]) -> list[dict[str, object
     ]
 
 
+def build_weekly_chart_points(weekly_rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    return [
+        {
+            "date": row["label"],
+            "weight": row["avg_weight"],
+            "waist": row["avg_waist"],
+            "notes": row["date_range"],
+        }
+        for row in sorted(weekly_rows, key=lambda row: row["week_number"])
+    ]
+
+
 def average(values: list[float]) -> float | None:
     if not values:
         return None
@@ -231,13 +243,12 @@ def build_dashboard_context() -> dict[str, object]:
 
 def build_insights_context() -> dict[str, object]:
     measurements = get_measurements()
-    chart_points = build_chart_points(measurements)
     insight_metrics = build_insight_metrics(measurements)
     weekly_groups: dict[str, list[Measurement]] = defaultdict(list)
 
     if not measurements:
         return {
-            "chart_points": chart_points,
+            "weekly_chart_points": [],
             "insight_metrics": insight_metrics,
             "weekly_rows": [],
             "current_week": None,
@@ -277,9 +288,10 @@ def build_insights_context() -> dict[str, object]:
 
     weekly_rows.sort(key=lambda row: row["week_number"], reverse=True)
     current_week = weekly_rows[0] if weekly_rows else None
+    weekly_chart_points = build_weekly_chart_points(weekly_rows)
 
     return {
-        "chart_points": chart_points,
+        "weekly_chart_points": weekly_chart_points,
         "insight_metrics": insight_metrics,
         "weekly_rows": weekly_rows,
         "current_week": current_week,

@@ -134,11 +134,12 @@
       return;
     }
 
+    const showTrendlines = canvas.dataset.rflTrendlines !== "false";
     const labels = points.map((point) => formatShortDate(point.date));
     const weightValues = points.map((point) => toNumber(point.weight));
     const waistValues = points.map((point) => toNumber(point.waist));
-    const weightTrend = rollingAverage(points, "weight");
-    const waistTrend = rollingAverage(points, "waist");
+    const weightTrend = showTrendlines ? rollingAverage(points, "weight") : [];
+    const waistTrend = showTrendlines ? rollingAverage(points, "waist") : [];
     const weightBounds = axisBounds([weightValues, weightTrend], 150, 250);
     const waistBounds = axisBounds([waistValues, waistTrend], 25, 45);
     const selectedTargets = {
@@ -148,62 +149,69 @@
       waist: document.getElementById(canvas.dataset.selectedWaist || "selectedWaist"),
     };
 
+    const datasets = [
+      {
+        label: "Weight (lbs)",
+        data: weightValues,
+        borderColor: "#7ee6ff",
+        backgroundColor: "rgba(126, 230, 255, 0.18)",
+        pointBackgroundColor: "#7ee6ff",
+        pointBorderColor: "#ffffff",
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBorderWidth: 2,
+        tension: 0.25,
+        spanGaps: true,
+        yAxisID: "yWeight",
+      },
+      {
+        label: "Waist (in)",
+        data: waistValues,
+        borderColor: "#ff7a1a",
+        backgroundColor: "rgba(255, 122, 26, 0.18)",
+        pointBackgroundColor: "#ff7a1a",
+        pointBorderColor: "#ffffff",
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBorderWidth: 2,
+        tension: 0.25,
+        spanGaps: true,
+        yAxisID: "yWaist",
+      },
+    ];
+
+    if (showTrendlines) {
+      datasets.push(
+        {
+          label: "Weight 7-day avg",
+          data: weightTrend,
+          borderColor: "rgba(126, 230, 255, 0.72)",
+          borderDash: [7, 5],
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.28,
+          spanGaps: true,
+          yAxisID: "yWeight",
+        },
+        {
+          label: "Waist 7-day avg",
+          data: waistTrend,
+          borderColor: "rgba(255, 155, 61, 0.78)",
+          borderDash: [7, 5],
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.28,
+          spanGaps: true,
+          yAxisID: "yWaist",
+        }
+      );
+    }
+
     const chart = new Chart(canvas, {
       type: "line",
       data: {
         labels,
-        datasets: [
-          {
-            label: "Weight (lbs)",
-            data: weightValues,
-            borderColor: "#7ee6ff",
-            backgroundColor: "rgba(126, 230, 255, 0.18)",
-            pointBackgroundColor: "#7ee6ff",
-            pointBorderColor: "#ffffff",
-            pointRadius: 4,
-            pointHoverRadius: 7,
-            pointBorderWidth: 2,
-            tension: 0.25,
-            spanGaps: true,
-            yAxisID: "yWeight",
-          },
-          {
-            label: "Waist (in)",
-            data: waistValues,
-            borderColor: "#ff7a1a",
-            backgroundColor: "rgba(255, 122, 26, 0.18)",
-            pointBackgroundColor: "#ff7a1a",
-            pointBorderColor: "#ffffff",
-            pointRadius: 4,
-            pointHoverRadius: 7,
-            pointBorderWidth: 2,
-            tension: 0.25,
-            spanGaps: true,
-            yAxisID: "yWaist",
-          },
-          {
-            label: "Weight 7-day avg",
-            data: weightTrend,
-            borderColor: "rgba(126, 230, 255, 0.72)",
-            borderDash: [7, 5],
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.28,
-            spanGaps: true,
-            yAxisID: "yWeight",
-          },
-          {
-            label: "Waist 7-day avg",
-            data: waistTrend,
-            borderColor: "rgba(255, 155, 61, 0.78)",
-            borderDash: [7, 5],
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.28,
-            spanGaps: true,
-            yAxisID: "yWaist",
-          },
-        ],
+        datasets,
       },
       options: {
         responsive: true,
@@ -259,6 +267,7 @@
           yWaist: {
             type: "linear",
             position: "right",
+            reverse: true,
             min: waistBounds.min,
             max: waistBounds.max,
             title: {

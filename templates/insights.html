@@ -79,12 +79,12 @@
   <section class="panel chart-panel">
     <div class="panel-header">
       <div>
-        <h2>Daily Trend</h2>
-        <p>Raw entries plus 7-day rolling averages.</p>
+        <h2>Weekly Trend</h2>
+        <p>Weekly average weight and waist by diet week.</p>
       </div>
     </div>
     <div class="chart-area">
-      <canvas id="insightsTrendChart" data-rfl-chart="insights"></canvas>
+      <canvas id="insightsTrendChart" data-rfl-chart="insights" data-rfl-trendlines="false"></canvas>
     </div>
   </section>
 
@@ -133,7 +133,7 @@
 {% block scripts %}
 <script>
   window.rflCharts = {
-    insights: {{ chart_points|tojson }}
+    insights: {{ weekly_chart_points|tojson }}
   };
 </script>
 <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
