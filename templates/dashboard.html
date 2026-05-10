@@ -18,11 +18,19 @@
         <div class="metric-value">{{ summary.start_date or "No data" }}</div>
       </div>
       <div class="metric-card metric-card-weight">
-        <div class="metric-label">Weight Today</div>
+        <div class="metric-label">Start Weight</div>
+        <div class="metric-value">{{ summary.start_weight ~ " lbs" if summary.start_weight else "No data" }}</div>
+      </div>
+      <div class="metric-card metric-card-waist">
+        <div class="metric-label">Start Waist</div>
+        <div class="metric-value">{{ summary.start_waist ~ " in" if summary.start_waist else "No data" }}</div>
+      </div>
+      <div class="metric-card metric-card-weight">
+        <div class="metric-label">Current Weight</div>
         <div class="metric-value">{{ summary.weight_today ~ " lbs" if summary.weight_today else "No data" }}</div>
       </div>
       <div class="metric-card metric-card-waist">
-        <div class="metric-label">Waist Today</div>
+        <div class="metric-label">Current Waist</div>
         <div class="metric-value">{{ summary.waist_today ~ " in" if summary.waist_today else "No data" }}</div>
       </div>
       <div class="metric-card metric-card-weight">
@@ -45,7 +53,7 @@
         </div>
       </div>
       <div class="chart-area">
-        <canvas id="trendChart"></canvas>
+        <canvas id="trendChart" data-rfl-chart="dashboard"></canvas>
       </div>
       <div class="selected-panel" id="selectedPointPanel">
         <div class="selected-cell">
@@ -80,7 +88,7 @@
       <form method="post" action="{{ url_for('create_measurement') }}" class="entry-form">
         <label>
           <span>Date</span>
-          <input type="date" name="entry_date" required value="{{ form_values.entry_date if form_values else default_entry_date }}">
+          <input type="date" name="entry_date" required value="{{ form_values.entry_date if form_values else default_entry_date }}" {% if not form_values %}data-local-default-date="true"{% endif %}>
         </label>
         <label>
           <span>Weight (lbs)</span>
@@ -144,7 +152,11 @@
 {% endblock %}
 {% block scripts %}
 <script>
-  window.rflChartData = {{ chart_points|tojson }};
+  window.rflCharts = {
+    dashboard: {{ chart_points|tojson }}
+  };
+  window.rflChartData = window.rflCharts.dashboard;
 </script>
 <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/local-date.js') }}"></script>
 {% endblock %}

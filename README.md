@@ -36,6 +36,10 @@ Target hosted stack:
 
 Set `DATABASE_URL` in the environment for hosted use.
 
+## Date Handling
+
+The add-measurement form uses `public/js/local-date.js` to set the default entry date from the browser/device local date. The server still validates submitted `YYYY-MM-DD` values and provides a fallback date when JavaScript is unavailable.
+
 Detailed deployment notes:
 
 - `DEPLOY_VERCEL_NEON.md`

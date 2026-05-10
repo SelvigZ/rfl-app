@@ -132,9 +132,8 @@ def get_measurements() -> list[Measurement]:
     return Measurement.query.order_by(Measurement.entry_date.asc(), Measurement.id.asc()).all()
 
 
-def build_dashboard_context() -> dict[str, object]:
-    measurements = get_measurements()
-    chart_points = [
+def build_chart_points(measurements: list[Measurement]) -> list[dict[str, object]]:
+    return [
         {
             "id": row.id,
             "date": row.entry_date,
@@ -145,9 +144,60 @@ def build_dashboard_context() -> dict[str, object]:
         for row in measurements
     ]
 
+
+def average(values: list[float]) -> float | None:
+    if not values:
+        return None
+    return sum(values) / len(values)
+
+
+def build_insight_metrics(measurements: list[Measurement]) -> dict[str, object]:
+    if not measurements:
+        return {
+            "seven_day_avg_weight": None,
+            "seven_day_avg_waist": None,
+            "total_weight_lost": None,
+            "total_waist_lost": None,
+            "avg_daily_weight_change": None,
+            "avg_weekly_weight_change": None,
+            "avg_weekly_waist_change": None,
+            "lowest_weight": None,
+            "lowest_waist": None,
+        }
+
+    first = measurements[0]
+    latest = measurements[-1]
+    trailing_rows = measurements[-7:]
+    first_date = datetime.strptime(first.entry_date, "%Y-%m-%d").date()
+    latest_date = datetime.strptime(latest.entry_date, "%Y-%m-%d").date()
+    elapsed_days = max((latest_date - first_date).days, 1)
+    weight_change = latest.weight_lbs - first.weight_lbs
+    waist_change = latest.waist_in - first.waist_in
+    lowest_weight = min(measurements, key=lambda row: row.weight_lbs)
+    lowest_waist = min(measurements, key=lambda row: row.waist_in)
+
+    return {
+        "seven_day_avg_weight": average([row.weight_lbs for row in trailing_rows]),
+        "seven_day_avg_waist": average([row.waist_in for row in trailing_rows]),
+        "total_weight_lost": first.weight_lbs - latest.weight_lbs,
+        "total_waist_lost": first.waist_in - latest.waist_in,
+        "avg_daily_weight_change": weight_change / elapsed_days,
+        "avg_weekly_weight_change": (weight_change / elapsed_days) * 7,
+        "avg_weekly_waist_change": (waist_change / elapsed_days) * 7,
+        "lowest_weight": lowest_weight,
+        "lowest_waist": lowest_waist,
+    }
+
+
+def build_dashboard_context() -> dict[str, object]:
+    measurements = get_measurements()
+    chart_points = build_chart_points(measurements)
+
     summary = {
         "row_count": 0,
         "start_date": "",
+        "start_weight": "",
+        "start_waist": "",
         "latest_date": "",
         "weight_today": "",
         "waist_today": "",
@@ -162,6 +212,8 @@ def build_dashboard_context() -> dict[str, object]:
         summary = {
             "row_count": len(measurements),
             "start_date": first.entry_date,
+            "start_weight": f"{first.weight_lbs:.2f}",
+            "start_waist": f"{first.waist_in:.2f}",
             "latest_date": latest.entry_date,
             "weight_today": f"{latest.weight_lbs:.2f}",
             "waist_today": f"{latest.waist_in:.2f}",
@@ -179,10 +231,14 @@ def build_dashboard_context() -> dict[str, object]:
 
 def build_insights_context() -> dict[str, object]:
     measurements = get_measurements()
+    chart_points = build_chart_points(measurements)
+    insight_metrics = build_insight_metrics(measurements)
     weekly_groups: dict[str, list[Measurement]] = defaultdict(list)
 
     if not measurements:
         return {
+            "chart_points": chart_points,
+            "insight_metrics": insight_metrics,
             "weekly_rows": [],
             "current_week": None,
         }
@@ -223,6 +279,8 @@ def build_insights_context() -> dict[str, object]:
     current_week = weekly_rows[0] if weekly_rows else None
 
     return {
+        "chart_points": chart_points,
+        "insight_metrics": insight_metrics,
         "weekly_rows": weekly_rows,
         "current_week": current_week,
     }

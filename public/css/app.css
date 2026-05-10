@@ -169,6 +169,10 @@ th,
   height: 360px;
 }
 
+.app-wrap > .chart-panel {
+  margin-bottom: 16px;
+}
+
 .selected-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

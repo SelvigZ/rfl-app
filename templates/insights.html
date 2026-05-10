@@ -27,11 +27,39 @@
           <div class="metric-value">{{ "%.2f in"|format(current_week.start_waist) }}</div>
         </div>
         <div class="metric-card metric-card-weight">
-          <div class="metric-label">Average Weight</div>
+          <div class="metric-label">7-Day Avg Weight</div>
+          <div class="metric-value">{{ "%.2f lbs"|format(insight_metrics.seven_day_avg_weight) if insight_metrics.seven_day_avg_weight is not none else "No data" }}</div>
+        </div>
+        <div class="metric-card metric-card-waist">
+          <div class="metric-label">7-Day Avg Waist</div>
+          <div class="metric-value">{{ "%.2f in"|format(insight_metrics.seven_day_avg_waist) if insight_metrics.seven_day_avg_waist is not none else "No data" }}</div>
+        </div>
+        <div class="metric-card metric-card-weight">
+          <div class="metric-label">Weekly Weight Change</div>
+          <div class="metric-value">{{ "%+.2f lbs"|format(insight_metrics.avg_weekly_weight_change) if insight_metrics.avg_weekly_weight_change is not none else "No data" }}</div>
+        </div>
+        <div class="metric-card metric-card-waist">
+          <div class="metric-label">Weekly Waist Change</div>
+          <div class="metric-value">{{ "%+.2f in"|format(insight_metrics.avg_weekly_waist_change) if insight_metrics.avg_weekly_waist_change is not none else "No data" }}</div>
+        </div>
+        <div class="metric-card metric-card-weight">
+          <div class="metric-label">Lowest Weight</div>
+          <div class="metric-value metric-value-small">
+            {{ "%.2f lbs on %s"|format(insight_metrics.lowest_weight.weight_lbs, insight_metrics.lowest_weight.entry_date) if insight_metrics.lowest_weight else "No data" }}
+          </div>
+        </div>
+        <div class="metric-card metric-card-waist">
+          <div class="metric-label">Lowest Waist</div>
+          <div class="metric-value metric-value-small">
+            {{ "%.2f in on %s"|format(insight_metrics.lowest_waist.waist_in, insight_metrics.lowest_waist.entry_date) if insight_metrics.lowest_waist else "No data" }}
+          </div>
+        </div>
+        <div class="metric-card metric-card-weight">
+          <div class="metric-label">Current Week Avg Weight</div>
           <div class="metric-value">{{ "%.2f lbs"|format(current_week.avg_weight) }}</div>
         </div>
         <div class="metric-card metric-card-waist">
-          <div class="metric-label">Average Waist</div>
+          <div class="metric-label">Current Week Avg Waist</div>
           <div class="metric-value">{{ "%.2f in"|format(current_week.avg_waist) }}</div>
         </div>
         <div class="metric-card metric-card-weight">
@@ -46,6 +74,18 @@
     {% else %}
       <p class="hero-sub">No data yet.</p>
     {% endif %}
+  </section>
+
+  <section class="panel chart-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Daily Trend</h2>
+        <p>Raw entries plus 7-day rolling averages.</p>
+      </div>
+    </div>
+    <div class="chart-area">
+      <canvas id="insightsTrendChart" data-rfl-chart="insights"></canvas>
+    </div>
   </section>
 
   <section class="panel table-panel">
@@ -89,4 +129,12 @@
     </div>
   </section>
 </main>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.rflCharts = {
+    insights: {{ chart_points|tojson }}
+  };
+</script>
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
 {% endblock %}
