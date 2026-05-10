@@ -196,6 +196,9 @@ def build_insight_metrics(measurements: list[Measurement]) -> dict[str, object]:
             "avg_weekly_waist_change": None,
             "lowest_weight": None,
             "lowest_waist": None,
+            "estimated_daily_deficit": None,
+            "estimated_deficit_note": "Need 14 days of entries.",
+            "waist_trend_note": "",
         }
 
     first = measurements[0]
@@ -208,6 +211,31 @@ def build_insight_metrics(measurements: list[Measurement]) -> dict[str, object]:
     waist_change = latest.waist_in - first.waist_in
     lowest_weight = min(measurements, key=lambda row: row.weight_lbs)
     lowest_waist = min(measurements, key=lambda row: row.waist_in)
+    estimated_daily_deficit = None
+    estimated_deficit_note = "Need 14 days of entries."
+    waist_trend_note = ""
+
+    if len(measurements) >= 14:
+        previous_rows = measurements[-14:-7]
+        current_rows = measurements[-7:]
+        previous_avg_weight = average([row.weight_lbs for row in previous_rows])
+        current_avg_weight = average([row.weight_lbs for row in current_rows])
+        previous_avg_waist = average([row.waist_in for row in previous_rows])
+        current_avg_waist = average([row.waist_in for row in current_rows])
+
+        if previous_avg_weight is not None and current_avg_weight is not None:
+            weekly_weight_change = current_avg_weight - previous_avg_weight
+            estimated_daily_deficit = max(0, (-weekly_weight_change * 3500) / 7)
+            estimated_deficit_note = "Based on the latest 7-day average vs the prior 7-day average."
+
+        if previous_avg_waist is not None and current_avg_waist is not None:
+            weekly_waist_change = current_avg_waist - previous_avg_waist
+            if weekly_waist_change < -0.1:
+                waist_trend_note = "Waist trend supports the weight trend."
+            elif weekly_waist_change > 0.1:
+                waist_trend_note = "Waist trend does not support the weight trend yet."
+            else:
+                waist_trend_note = "Waist trend is mostly flat this week."
 
     return {
         "seven_day_avg_weight": average([row.weight_lbs for row in trailing_rows]),
@@ -219,6 +247,9 @@ def build_insight_metrics(measurements: list[Measurement]) -> dict[str, object]:
         "avg_weekly_waist_change": (waist_change / elapsed_days) * 7,
         "lowest_weight": lowest_weight,
         "lowest_waist": lowest_waist,
+        "estimated_daily_deficit": estimated_daily_deficit,
+        "estimated_deficit_note": estimated_deficit_note,
+        "waist_trend_note": waist_trend_note,
     }
 
 

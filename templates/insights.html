@@ -42,6 +42,16 @@
           <div class="metric-label">Weekly Waist Change</div>
           <div class="metric-value">{{ "%+.2f in"|format(insight_metrics.avg_weekly_waist_change) if insight_metrics.avg_weekly_waist_change is not none else "No data" }}</div>
         </div>
+        <div class="metric-card metric-card-start metric-card-wide">
+          <div class="metric-label">Estimated Caloric Deficit</div>
+          <div class="metric-value">
+            {{ "~%.0f kcal/day"|format(insight_metrics.estimated_daily_deficit) if insight_metrics.estimated_daily_deficit is not none else "Need 14 days" }}
+          </div>
+          <div class="metric-note">
+            {{ insight_metrics.estimated_deficit_note }}
+            {% if insight_metrics.waist_trend_note %} {{ insight_metrics.waist_trend_note }}{% endif %}
+          </div>
+        </div>
         <div class="metric-card metric-card-weight">
           <div class="metric-label">Lowest Weight</div>
           <div class="metric-value metric-value-small">
