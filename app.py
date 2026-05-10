@@ -66,6 +66,27 @@ def today_iso_date() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
 
+def display_date(date_text: str) -> str:
+    try:
+        return datetime.strptime(date_text, "%Y-%m-%d").strftime("%b-%d-%Y")
+    except (TypeError, ValueError):
+        return date_text
+
+
+app.jinja_env.filters["display_date"] = display_date
+
+
+def display_date_range(date_range: str) -> str:
+    try:
+        start_text, end_text = date_range.split(" to ", 1)
+    except (AttributeError, ValueError):
+        return date_range
+    return f"{display_date(start_text)} to {display_date(end_text)}"
+
+
+app.jinja_env.filters["display_date_range"] = display_date_range
+
+
 def init_db() -> None:
     db.create_all()
 

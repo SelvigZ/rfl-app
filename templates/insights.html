@@ -45,13 +45,13 @@
         <div class="metric-card metric-card-weight">
           <div class="metric-label">Lowest Weight</div>
           <div class="metric-value metric-value-small">
-            {{ "%.2f lbs on %s"|format(insight_metrics.lowest_weight.weight_lbs, insight_metrics.lowest_weight.entry_date) if insight_metrics.lowest_weight else "No data" }}
+            {{ "%.2f lbs on %s"|format(insight_metrics.lowest_weight.weight_lbs, insight_metrics.lowest_weight.entry_date|display_date) if insight_metrics.lowest_weight else "No data" }}
           </div>
         </div>
         <div class="metric-card metric-card-waist">
           <div class="metric-label">Lowest Waist</div>
           <div class="metric-value metric-value-small">
-            {{ "%.2f in on %s"|format(insight_metrics.lowest_waist.waist_in, insight_metrics.lowest_waist.entry_date) if insight_metrics.lowest_waist else "No data" }}
+            {{ "%.2f in on %s"|format(insight_metrics.lowest_waist.waist_in, insight_metrics.lowest_waist.entry_date|display_date) if insight_metrics.lowest_waist else "No data" }}
           </div>
         </div>
         <div class="metric-card metric-card-weight">
@@ -68,7 +68,7 @@
         </div>
         <div class="metric-card metric-card-waist">
           <div class="metric-label">Date Range</div>
-          <div class="metric-value metric-value-small">{{ current_week.date_range }}</div>
+          <div class="metric-value metric-value-small">{{ current_week.date_range|display_date_range }}</div>
         </div>
       </div>
     {% else %}
@@ -112,7 +112,7 @@
           {% for row in weekly_rows %}
             <tr>
               <td>{{ row.label }}</td>
-              <td>{{ row.date_range }}</td>
+              <td>{{ row.date_range|display_date_range }}</td>
               <td>{{ "%.2f"|format(row.start_weight) }}</td>
               <td>{{ "%.2f"|format(row.start_waist) }}</td>
               <td>{{ "%.2f"|format(row.avg_weight) }}</td>

@@ -15,7 +15,7 @@
     <div class="metric-grid">
       <div class="metric-card metric-card-start">
         <div class="metric-label">Start Date</div>
-        <div class="metric-value">{{ summary.start_date or "No data" }}</div>
+        <div class="metric-value">{{ summary.start_date|display_date if summary.start_date else "No data" }}</div>
       </div>
       <div class="metric-card metric-card-weight">
         <div class="metric-label">Start Weight</div>
@@ -58,7 +58,7 @@
       <div class="selected-panel" id="selectedPointPanel">
         <div class="selected-cell">
           <div class="selected-label">Selected Date</div>
-          <div class="selected-value" id="selectedDate">{{ selected_point.date if selected_point else "No data" }}</div>
+          <div class="selected-value" id="selectedDate">{{ selected_point.date|display_date if selected_point else "No data" }}</div>
         </div>
         <div class="selected-cell">
           <div class="selected-label">Selected Weight</div>
@@ -128,7 +128,7 @@
         <tbody>
           {% for row in measurements|reverse %}
             <tr>
-              <td>{{ row["entry_date"] }}</td>
+              <td>{{ row["entry_date"]|display_date }}</td>
               <td>{{ "%.2f"|format(row["weight_lbs"]) }}</td>
               <td>{{ "%.2f"|format(row["waist_in"]) }}</td>
               <td>{{ row["notes"] }}</td>

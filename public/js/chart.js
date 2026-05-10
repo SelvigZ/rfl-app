@@ -24,7 +24,18 @@
     if (!date) {
       return dateText;
     }
-    return date.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).replace(" ", "-");
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" }).replace(" ", "-");
+  };
+
+  const formatFullDate = (dateText) => {
+    const date = parseLocalDate(dateText);
+    if (!date) {
+      return dateText || "No data";
+    }
+
+    const month = date.toLocaleDateString("en-US", { month: "short" });
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${month}-${day}-${date.getFullYear()}`;
   };
 
   const formatValue = (value, unit) => {
@@ -117,7 +128,7 @@
       }
 
       chart.$selectedIndex = pointIndex;
-      selectedTargets.date.textContent = point.date || "No data";
+      selectedTargets.date.textContent = formatFullDate(point.date);
       selectedTargets.weight.textContent = formatValue(point.weight, "lbs");
       selectedTargets.waist.textContent = formatValue(point.waist, "in");
       chart.draw();
