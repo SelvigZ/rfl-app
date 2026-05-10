@@ -69,6 +69,24 @@
     };
   };
 
+  const separatedAxisBounds = (weightDatasets, waistDatasets) => {
+    const weightBounds = axisBounds(weightDatasets, 150, 250);
+    const waistBounds = axisBounds(waistDatasets, 25, 45);
+    const weightRange = weightBounds.max - weightBounds.min;
+    const waistRange = waistBounds.max - waistBounds.min;
+
+    return {
+      weight: {
+        min: Number((weightBounds.min - weightRange * 0.08).toFixed(2)),
+        max: Number((weightBounds.max + weightRange * 0.22).toFixed(2)),
+      },
+      waist: {
+        min: Number((waistBounds.min - waistRange * 0.22).toFixed(2)),
+        max: Number((waistBounds.max + waistRange * 0.08).toFixed(2)),
+      },
+    };
+  };
+
   const makeSelectedPointPlugin = (points, selectedTargets) => ({
     id: `selectedPointPlugin-${selectedTargets.prefix}`,
     afterEvent(chart, args) {
@@ -140,8 +158,7 @@
     const waistValues = points.map((point) => toNumber(point.waist));
     const weightTrend = showTrendlines ? rollingAverage(points, "weight") : [];
     const waistTrend = showTrendlines ? rollingAverage(points, "waist") : [];
-    const weightBounds = axisBounds([weightValues, weightTrend], 150, 250);
-    const waistBounds = axisBounds([waistValues, waistTrend], 25, 45);
+    const bounds = separatedAxisBounds([weightValues, weightTrend], [waistValues, waistTrend]);
     const selectedTargets = {
       prefix: canvas.id || canvas.dataset.rflChart,
       date: document.getElementById(canvas.dataset.selectedDate || "selectedDate"),
@@ -250,8 +267,8 @@
           yWeight: {
             type: "linear",
             position: "left",
-            min: weightBounds.min,
-            max: weightBounds.max,
+            min: bounds.weight.min,
+            max: bounds.weight.max,
             title: {
               display: true,
               text: "Weight (lbs)",
@@ -267,9 +284,8 @@
           yWaist: {
             type: "linear",
             position: "right",
-            reverse: true,
-            min: waistBounds.min,
-            max: waistBounds.max,
+            min: bounds.waist.min,
+            max: bounds.waist.max,
             title: {
               display: true,
               text: "Waist (in)",
